@@ -45,6 +45,10 @@ struct Cli {
     start: bool,
     #[arg(long)]
     logout: bool,
+
+    /// Node ID for authentication
+    #[arg(long)]
+    node_id: Option<String>,
 }
 
 #[derive(Parser, Debug)]
@@ -72,6 +76,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Set environment once at the start
         let environment = config::Environment::from_args(cli.local, cli.dev, cli.staging, cli.beta);
+
+        // If node_id is provided via command line, use it directly
+        if let Some(node_id) = cli.node_id {
+            println!(
+                "\n===== {} =====\n",
+                "Starting proof generation for programs"
+                    .bold()
+                    .underline()
+                    .bright_cyan()
+            );
+            let flops = flops::measure_flops();
+            println!("Node computational capacity: {:.2} FLOPS", flops);
+            println!("You are proving with the following node ID: {}", node_id);
+
+            let mut proof_count = 1;
+            loop {
+                println!("\n================================================");
+                println!("\nStarting proof #{}...\n", proof_count);
+
+                match authenticated_proving(&node_id, &environment).await {
+                    Ok(_) => (),
+                    Err(e) => println!("Error in authenticated proving: {}", e),
+                }
+                proof_count += 1;
+                tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+            }
+        }
 
         println!(
             "\n===== {} =====\n",
