@@ -56,29 +56,29 @@ async fn authenticated_proving(
 }
 
 fn anonymous_proving() -> Result<(), Box<dyn std::error::Error>> {
-    // 获取系统内存信息 (KiB)
+    // 获取系统内存信息 (MiB)
     let (used_mem, total_mem) = get_memory_info();
     let available_mem = total_mem - used_mem;
     // 使用可用内存的 3/4
-    let safe_mem = (available_mem as f64 * 0.75) as u64;
+    let safe_mem = (available_mem as f64 * 0.75) as i32;
     
-    println!("System Memory - Total: {}MB, Used: {}MB, Available: {}MB, Will use up to: {}MB", 
-        total_mem / 1024,      // KiB to MiB
-        used_mem / 1024,       // KiB to MiB
-        available_mem / 1024,  // KiB to MiB
-        safe_mem / 1024        // KiB to MiB
+    println!("System Memory - Total: {}MiB, Used: {}MiB, Available: {}MiB, Will use up to: {}MiB", 
+        total_mem,
+        used_mem,
+        available_mem,
+        safe_mem
     );
 
-    // 使用 MiB 为单位来避免溢出
-    let public_input: u32 = match safe_mem / 1024 {  // KiB to MiB
+    // 使用 MiB 为单位
+    let public_input: u32 = match safe_mem {
         mem if mem < 1024 => 3,     // < 1GB
         mem if mem < 2048 => 5,     // < 2GB
         _ => 9                      // >= 2GB
     };
 
-    println!("Using input value: {} based on available memory: {}MB", 
+    println!("Using input value: {} based on available memory: {}MiB", 
         public_input, 
-        safe_mem / 1024
+        safe_mem
     );
 
     //2. Compile the guest program
