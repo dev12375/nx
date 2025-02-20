@@ -12,6 +12,7 @@ use crate::setup;
 use crate::utils;
 use colored::Colorize;
 use sha3::{Digest, Keccak256};
+use crate::memory_stats::get_memory_info;
 
 /// Proves a program with a given node ID
 #[allow(dead_code)]
@@ -55,24 +56,44 @@ async fn authenticated_proving(
 }
 
 fn anonymous_proving() -> Result<(), Box<dyn std::error::Error>> {
-    // 1. Instead of fetching the proof task from the orchestrator, we will use hardcoded input program and values
+    // 获取系统内存信息
+    let (used_mem, total_mem) = get_memory_info();
+    let available_mem = total_mem - used_mem;
+    // 使用可用内存的 7/8
+    let safe_mem = (available_mem as f64 * 0.875) as i32;
+    
+    println!("Available memory: {}MB, Will use up to: {}MB", 
+        available_mem / (1024 * 1024),
+        safe_mem / (1024 * 1024)
+    );
 
-    // The 10th term of the Fibonacci sequence is 55
-    let public_input: u32 = 9;
+    // 1. Instead of fetching the proof task from the orchestrator, we will use hardcoded input program and values
+    let public_input: u32 = match safe_mem {
+        mem if mem < 1024 * 1024 * 1024 => 3,  // < 1GB 使用较小的输入
+        mem if mem < 2 * 1024 * 1024 * 1024 => 5,  // < 2GB
+        _ => 9  // 原始值
+    };
+
+    println!("Using input value: {} based on available memory", public_input);
 
     //2. Compile the guest program
     println!("1. Compiling guest program...");
     let elf_file_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("assets")
         .join("fib_input");
-    let prover =
-        Stwo::<Local>::new_from_file(&elf_file_path).expect("failed to load guest program");
+    let prover = match Stwo::<Local>::new_from_file(&elf_file_path) {
+        Ok(p) => p,
+        Err(e) => return Err(format!("Failed to load guest program: {}", e).into())
+    };
 
     //3. Run the prover
     println!("2. Creating ZK proof...");
-    let (view, proof) = prover
-        .prove_with_input::<(), u32>(&(), &public_input)
-        .expect("Failed to run prover");
+    let (view, proof) = match prover.prove_with_input::<(), u32>(&(), &public_input) {
+        Ok(result) => result,
+        Err(e) => {
+            return Err(format!("Failed to create proof (memory error?): {}", e).into());
+        }
+    };
 
     assert_eq!(view.exit_code().expect("failed to retrieve exit code"), 0);
 
