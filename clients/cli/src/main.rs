@@ -39,6 +39,10 @@ enum Command {
         /// Environment to run in
         #[arg(long, value_enum)]
         env: Option<Environment>,
+
+        /// Node ID for authentication (required)
+        #[arg(long, required = true)]
+        node_id: String,
     },
     /// Logout from the current session
     Logout,
@@ -64,7 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     //each arm of the match is a command
     match cli.command {
-        Command::Start { env } => {
+        Command::Start { env, node_id } => {
             match prover::start_prover(&config::Environment::from_args(env.as_ref())).await {
                 Ok(_) => println!("Prover started successfully"),
                 Err(e) => eprintln!("Failed to start prover: {}", e),
