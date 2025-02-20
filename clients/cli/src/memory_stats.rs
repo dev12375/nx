@@ -27,8 +27,8 @@ pub fn get_memory_info() -> (i32, i32) {
     let total_mem = (sys.total_memory()) as i32;  // 保持 KiB
     
     // 转换为 MiB
-    let used_mem_mb = used_mem / 1024;
-    let total_mem_mb = total_mem / 1024;
+    let used_mem_mb = used_mem / 1024 / 1024;
+    let total_mem_mb = total_mem / 1024 / 1024;
 
     println!("Debug - Total Memory: {}MiB, Used Memory: {}MiB", 
         total_mem_mb,
