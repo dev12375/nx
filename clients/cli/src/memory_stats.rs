@@ -1,5 +1,8 @@
-use std::process;
-use sysinfo::{System, SystemExt};
+// 移除未使用的导入
+// use std::process;
+
+// 修改 sysinfo 的导入
+use sysinfo::System;
 
 // We encode the memory usage to i32 type at client
 pub fn bytes_to_mb_i32(bytes: u64) -> i32 {
@@ -16,8 +19,8 @@ pub fn mb_i32_to_f32(mb: i32) -> f32 {
 }
 
 pub fn get_memory_info() -> (i32, i32) {
-    let mut sys = System::new_all();
-    sys.refresh_all();
+    let mut sys = System::new();
+    sys.refresh_memory();  // 只刷新内存信息
 
     // 转换为 MB 并确保在 i32 范围内
     let used_mem = (sys.used_memory() / 1024) as i32;  // KiB to MiB
