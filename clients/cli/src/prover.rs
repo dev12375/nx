@@ -87,27 +87,22 @@ fn anonymous_proving(config: &ProverConfig) -> Result<(), Box<dyn std::error::Er
     // 获取系统内存信息 (MiB)
     let (used_mem, total_mem) = get_memory_info();
     let available_mem = total_mem - used_mem;
-    // 使用可用内存的 3/4
-    let safe_mem = (available_mem as f64 * 0.75) as i32;
     
-    println!("System Memory - Total: {}MiB, Used: {}MiB, Available: {}MiB, Will use up to: {}MiB", 
+    // 根据总可用内存大小选择合适的输入值
+    let public_input: u32 = if available_mem < 1024 {  // 小于 1GB
+        2  // 最小输入值
+    } else if available_mem < 2048 {  // 小于 2GB
+        3  // 较小输入值
+    } else {
+        4  // 标准输入值
+    };
+
+    println!("System Memory - Total: {}MiB, Used: {}MiB, Available: {}MiB", 
         total_mem,
         used_mem,
         available_mem,
-        safe_mem
     );
-
-    // 使用 MiB 为单位
-    let public_input: u32 = match safe_mem {
-        mem if mem < 1024 => 3,     // < 1GB
-        mem if mem < 2048 => 5,     // < 2GB
-        _ => 9                      // >= 2GB
-    };
-
-    println!("Using input value: {} based on available memory: {}MiB", 
-        public_input, 
-        safe_mem
-    );
+    println!("Selected minimal input value {} for low memory system", public_input);
 
     println!("1. Compiling guest program...");
     let elf_file_path = std::path::Path::new(&config.elf_file_path);
