@@ -59,8 +59,8 @@ fn anonymous_proving() -> Result<(), Box<dyn std::error::Error>> {
     // 获取系统内存信息
     let (used_mem, total_mem) = get_memory_info();
     let available_mem = total_mem - used_mem;
-    // 使用可用内存的 7/8
-    let safe_mem = (available_mem as f64 * 0.875) as i32;
+    // 使用可用内存的 3/4
+    let safe_mem = (available_mem as f64 * 0.75) as i32;
     
     println!("Available memory: {}MB, Will use up to: {}MB", 
         available_mem / (1024 * 1024),
