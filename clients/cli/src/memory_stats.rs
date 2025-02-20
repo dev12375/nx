@@ -22,11 +22,18 @@ pub fn get_memory_info() -> (i32, i32) {
     let mut sys = System::new();
     sys.refresh_memory();
 
-    // 转换 KiB 到 MiB
-    let used_mem = (sys.used_memory() / 1024) as i32;    // KiB to MiB
-    let total_mem = (sys.total_memory() / 1024) as i32;  // KiB to MiB
+    // sysinfo 返回的是 KiB，需要转换为 MiB
+    let used_mem = (sys.used_memory()) as i32;    // 保持 KiB
+    let total_mem = (sys.total_memory()) as i32;  // 保持 KiB
+    
+    // 转换为 MiB
+    let used_mem_mb = used_mem / 1024;
+    let total_mem_mb = total_mem / 1024;
 
-    println!("Debug - Total Memory: {}MiB, Used Memory: {}MiB", total_mem, used_mem);
+    println!("Debug - Total Memory: {}MiB, Used Memory: {}MiB", 
+        total_mem_mb,
+        used_mem_mb
+    );
 
-    (used_mem, total_mem)
+    (used_mem_mb, total_mem_mb)  // 返回 MiB 单位的值
 }
