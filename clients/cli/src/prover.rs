@@ -67,14 +67,17 @@ fn anonymous_proving() -> Result<(), Box<dyn std::error::Error>> {
         safe_mem / (1024 * 1024)
     );
 
-    // 1. Instead of fetching the proof task from the orchestrator, we will use hardcoded input program and values
-    let public_input: u32 = match safe_mem {
-        mem if mem < 1024 * 1024 * 1024 => 3,  // < 1GB 使用较小的输入
-        mem if mem < 2 * 1024 * 1024 * 1024 => 5,  // < 2GB
-        _ => 9  // 原始值
+    // 使用 MB 为单位来避免溢出
+    let public_input: u32 = match safe_mem / (1024 * 1024) {  // 转换为 MB
+        mem if mem < 1024 => 3,     // < 1GB
+        mem if mem < 2048 => 5,     // < 2GB
+        _ => 9                      // >= 2GB
     };
 
-    println!("Using input value: {} based on available memory", public_input);
+    println!("Using input value: {} based on available memory: {}MB", 
+        public_input, 
+        safe_mem / (1024 * 1024)
+    );
 
     //2. Compile the guest program
     println!("1. Compiling guest program...");
