@@ -69,7 +69,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //each arm of the match is a command
     match cli.command {
         Command::Start { env, node_id } => {
-            match prover::start_prover(&config::Environment::from_args(env.as_ref())).await {
+            match prover::start_prover(&config::Environment::from_args(env.as_ref()), node_id).await {
                 Ok(_) => println!("Prover started successfully"),
                 Err(e) => eprintln!("Failed to start prover: {}", e),
             }

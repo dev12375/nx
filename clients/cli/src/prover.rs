@@ -6,9 +6,7 @@ use nexus_sdk::{
 };
 
 use crate::config;
-use crate::flops;
 use crate::orchestrator_client::OrchestratorClient;
-use crate::setup;
 use crate::utils;
 use colored::Colorize;
 use sha3::{Digest, Keccak256};
