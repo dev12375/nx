@@ -13,6 +13,9 @@ use crate::utils;
 use colored::Colorize;
 use sha3::{Digest, Keccak256};
 use crate::memory_stats::get_memory_info;
+use std::env;
+use home::home_dir;  // 确保添加 home = "0.5" 到 Cargo.toml
+use std::path::{Path, PathBuf};
 
 /// Proves a program with a given node ID
 #[allow(dead_code)]
@@ -55,7 +58,32 @@ async fn authenticated_proving(
     Ok(())
 }
 
-fn anonymous_proving() -> Result<(), Box<dyn std::error::Error>> {
+// 添加新的结构体来存储配置
+pub struct ProverConfig {
+    pub elf_file_path: String,
+}
+
+impl Default for ProverConfig {
+    fn default() -> Self {
+        let home_path = home_dir()
+            .unwrap_or_else(|| PathBuf::from("/root"));  // 如果找不到主目录就用 /root
+            
+        let file_path = home_path
+            .join(".nexus")
+            .join("network-api")
+            .join("clients")
+            .join("cli")
+            .join("assets")
+            .join("fib_input");
+            
+        Self {
+            elf_file_path: file_path.to_string_lossy().to_string(),
+        }
+    }
+}
+
+// 修改函数签名，添加配置参数
+fn anonymous_proving(config: &ProverConfig) -> Result<(), Box<dyn std::error::Error>> {
     // 获取系统内存信息 (MiB)
     let (used_mem, total_mem) = get_memory_info();
     let available_mem = total_mem - used_mem;
@@ -81,11 +109,15 @@ fn anonymous_proving() -> Result<(), Box<dyn std::error::Error>> {
         safe_mem
     );
 
-    //2. Compile the guest program
     println!("1. Compiling guest program...");
-    let elf_file_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("assets")
-        .join("fib_input");
+    let elf_file_path = std::path::Path::new(&config.elf_file_path);
+    
+    println!("Looking for file at: {}", elf_file_path.display());
+    
+    if !elf_file_path.exists() {
+        return Err(format!("File not found at: {}", elf_file_path.display()).into());
+    }
+
     let prover = match Stwo::<Local>::new_from_file(&elf_file_path) {
         Ok(p) => p,
         Err(e) => return Err(format!("Failed to load guest program: {}", e).into())
@@ -140,7 +172,13 @@ pub async fn start_prover(
                     .underline()
                     .bright_cyan()
             );
-            // Run the proof generation loop with anonymous proving
+            
+            // 使用默认配置或从环境变量获取
+            let config = ProverConfig {
+                elf_file_path: std::env::var("PROVER_ELF_PATH")
+                    .unwrap_or_else(|_| ProverConfig::default().elf_file_path),
+            };
+
             let mut proof_count = 1;
             loop {
                 println!("\n================================================");
@@ -148,7 +186,7 @@ pub async fn start_prover(
                     "{}",
                     format!("\nStarting proof #{} ...\n", proof_count).yellow()
                 );
-                match anonymous_proving() {
+                match anonymous_proving(&config) {
                     Ok(_) => (),
                     Err(e) => println!("Error in anonymous proving: {}", e),
                 }
@@ -191,7 +229,7 @@ pub async fn start_prover(
                     format!("\nStarting proof #{} ...\n", proof_count).yellow()
                 );
 
-                match anonymous_proving() {
+                match anonymous_proving(&ProverConfig::default()) {
                     Ok(_) => (),
                     Err(e) => println!("Error in anonymous proving: {}", e),
                 }

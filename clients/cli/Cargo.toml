@@ -48,7 +48,7 @@ tokio-tungstenite = { version = "0.23", features = ["native-tls"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 uuid = { version = "1.9", features = ["v4", "fast-rng"] }
-home = "0.5.9"
+home = "0.5"
 random_word = { version = "0.4.3", features = ["en"] }
 iana-time-zone = "0.1.60"
 chrono = "0.4.38"
