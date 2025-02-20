@@ -20,11 +20,11 @@ pub fn mb_i32_to_f32(mb: i32) -> f32 {
 
 pub fn get_memory_info() -> (i32, i32) {
     let mut sys = System::new();
-    sys.refresh_memory();  // 只刷新内存信息
+    sys.refresh_memory();
 
-    // 转换为 MB 并确保在 i32 范围内
-    let used_mem = (sys.used_memory() / 1024) as i32;  // KiB to MiB
-    let total_mem = (sys.total_memory() / 1024) as i32; // KiB to MiB
+    // 转换 KiB 到 MiB
+    let used_mem = (sys.used_memory() / 1024) as i32;    // KiB to MiB
+    let total_mem = (sys.total_memory() / 1024) as i32;  // KiB to MiB
 
     println!("Debug - Total Memory: {}MiB, Used Memory: {}MiB", total_mem, used_mem);
 
